@@ -93,28 +93,14 @@ const response = await processor.process({
 });
 ```
 
-### Persistence (Already Implemented!)
+### Adding Persistence
 
-The local runner now includes **file-based persistence** for soul memories:
+The local runner uses in-memory storage. To add persistence:
 
 ```typescript
-// Memories are saved to JSON files
-private memoryFilePath = ".soul-memories/scholar-memory.json";
-
-// The soul memory interface provides get/set methods
-const { get, set } = this.getSoulMemoryInterface();
-await set("userName", "Alice");
-const name = await get("userName");
+// Replace the Map with a database
+const soulMemoryStore = new Map(); // Change to Redis, SQLite, etc.
 ```
-
-**What's Persisted:**
-
-- User's name
-- Facts learned about the user
-- Conversation count and milestones
-- Topics explored together
-
-To use a different storage backend (Redis, SQLite, etc.), modify the `getSoulMemoryInterface()` method in `local-soul-runner.ts`.
 
 ### Custom Cognitive Process
 

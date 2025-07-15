@@ -36,6 +36,3 @@ soul-data/
 
 # TypeScript cache
 *.tsbuildinfo 
-
-# Soul persistent memories
-.soul-memories/ 

@@ -16,7 +16,7 @@ import { EventEmitter } from "events";
 import { join } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { readFileSync } from "fs";
 
 // Debug logging to see if script starts
 console.log("Starting OPEN SOULS Local Runner...");
@@ -50,75 +50,11 @@ class LocalSoulRunner extends EventEmitter {
   private cognitiveSteps: Map<string, Function> = new Map();
   private isProcessing: boolean = false;
   private soulMemoryStore = new Map<string, any>();
-  private memoryFilePath: string;
 
   constructor(soulName: string) {
     super();
     this.soulName = soulName;
     log.info(`Initializing local soul: ${soulName}`);
-
-    // Set up persistent memory file path
-    const memoryDir = join(__dirname, "..", ".soul-memories");
-    if (!existsSync(memoryDir)) {
-      mkdirSync(memoryDir, { recursive: true });
-    }
-    this.memoryFilePath = join(
-      memoryDir,
-      `${soulName.toLowerCase()}-memory.json`
-    );
-
-    // Load existing memories from file
-    this.loadMemoriesFromFile();
-  }
-
-  /**
-   * Load memories from persistent storage
-   */
-  private loadMemoriesFromFile() {
-    try {
-      if (existsSync(this.memoryFilePath)) {
-        const data = readFileSync(this.memoryFilePath, "utf-8");
-        const memories = JSON.parse(data);
-        Object.entries(memories).forEach(([key, value]) => {
-          this.soulMemoryStore.set(key, value);
-        });
-        log.success(
-          `Loaded ${
-            Object.keys(memories).length
-          } memories from persistent storage`
-        );
-      } else {
-        log.info("No existing memories found, starting fresh");
-      }
-    } catch (error) {
-      log.error(
-        `Failed to load memories: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
-    }
-  }
-
-  /**
-   * Save memories to persistent storage
-   */
-  private saveMemoriesToFile() {
-    try {
-      const memories: Record<string, any> = {};
-      this.soulMemoryStore.forEach((value, key) => {
-        memories[key] = value;
-      });
-      writeFileSync(this.memoryFilePath, JSON.stringify(memories, null, 2));
-      log.memory(
-        `Saved ${Object.keys(memories).length} memories to persistent storage`
-      );
-    } catch (error) {
-      log.error(
-        `Failed to save memories: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
-    }
   }
 
   /**
@@ -268,21 +204,9 @@ class LocalSoulRunner extends EventEmitter {
    */
   private async runCognitiveProcess() {
     const startTime = Date.now();
-    const { get, set } = this.getSoulMemoryInterface();
 
     // Simulate the initial process logic
     log.process("Running cognitive process...");
-
-    // Check for stored memories
-    const userName = await get("userName");
-    const conversationCount = ((await get("conversationCount")) as number) || 0;
-    const userFacts = ((await get("userFacts")) as string[]) || [];
-
-    if (userName) {
-      log.info(`Remembering user: ${userName}`);
-      log.info(`Previous conversations: ${conversationCount}`);
-      log.info(`Known facts: ${userFacts.length}`);
-    }
 
     // Step 1: Internal monologue
     if (this.cognitiveSteps.has("internalMonologue")) {
@@ -290,62 +214,15 @@ class LocalSoulRunner extends EventEmitter {
       const internalMonologue = this.cognitiveSteps.get("internalMonologue")!;
 
       try {
-        let instructions = "Reflect on the user's message and your purpose";
-        if (userName) {
-          instructions += `. Remember, you're talking to ${userName}`;
-          if (userFacts.length > 0) {
-            instructions += `. You know: ${userFacts.slice(-3).join(", ")}`;
-          }
-        }
-
         const [newMemory, thought] = await internalMonologue(
           this.workingMemory,
           {
-            instructions,
+            instructions: "Reflect on the user's message and your purpose",
             verb: "contemplates",
           }
         );
         this.workingMemory = newMemory;
         this.ensureEntityName();
-
-        // Check if we learned the user's name from the message
-        const lastUserMessage = this.workingMemory.memories
-          .filter((m) => m.role === "user")
-          .pop()?.content as string;
-
-        if (!userName && lastUserMessage) {
-          const nameMatch = lastUserMessage.match(
-            /(?:my name is|i'm|i am|call me)\s+(\w+)/i
-          );
-          if (nameMatch) {
-            const detectedName = nameMatch[1];
-            await set("userName", detectedName);
-            log.success(`Learned user's name: ${detectedName}`);
-          }
-        }
-
-        // Check for facts about the user
-        if (lastUserMessage) {
-          const factPatterns = [
-            /i (?:like|love|enjoy|prefer)\s+(.+?)(?:\.|$)/i,
-            /my (?:favorite|favourite)\s+(.+?)\s+(?:is|are)\s+(.+?)(?:\.|$)/i,
-            /i (?:work|am|do)\s+(?:as|in|at)\s+(.+?)(?:\.|$)/i,
-            /i (?:have|own)\s+(.+?)(?:\.|$)/i,
-          ];
-
-          for (const pattern of factPatterns) {
-            const match = lastUserMessage.match(pattern);
-            if (match) {
-              const fact = match[0];
-              const currentFacts = ((await get("userFacts")) as string[]) || [];
-              if (!currentFacts.includes(fact)) {
-                currentFacts.push(fact);
-                await set("userFacts", currentFacts);
-                log.success(`Learned new fact: ${fact}`);
-              }
-            }
-          }
-        }
       } catch (error) {
         log.error("Error in internal monologue");
       }
@@ -357,19 +234,9 @@ class LocalSoulRunner extends EventEmitter {
       const externalDialog = this.cognitiveSteps.get("externalDialog")!;
 
       try {
-        let instructions =
-          "Respond thoughtfully to the user, demonstrating your understanding and curiosity";
-        if (userName) {
-          instructions += `. Address them as ${userName} when appropriate`;
-        }
-        if (conversationCount > 0) {
-          instructions += `. This is conversation #${
-            conversationCount + 1
-          } with them`;
-        }
-
         const [newMemory, response] = await externalDialog(this.workingMemory, {
-          instructions,
+          instructions:
+            "Respond thoughtfully to the user, demonstrating your understanding and curiosity",
           stream: false,
         });
 
@@ -378,21 +245,6 @@ class LocalSoulRunner extends EventEmitter {
 
         // Emit the response
         this.emit("speaks", { content: response });
-
-        // Update conversation count
-        await set("conversationCount", conversationCount + 1);
-
-        // Store conversation summary if this is a significant milestone
-        if ((conversationCount + 1) % 5 === 0) {
-          const summaries =
-            ((await get("conversationSummaries")) as any[]) || [];
-          summaries.push({
-            conversationNumber: conversationCount + 1,
-            timestamp: new Date().toISOString(),
-            messageCount: this.workingMemory.memories.length,
-          });
-          await set("conversationSummaries", summaries);
-        }
       } catch (error) {
         log.error("Error in external dialog");
         // Fallback response
@@ -439,86 +291,6 @@ class LocalSoulRunner extends EventEmitter {
         : null,
     };
   }
-
-  /**
-   * Show what the soul remembers about the user
-   */
-  async showWhatIRemember() {
-    const { get } = this.getSoulMemoryInterface();
-
-    log.section("Scholar's Memories About You");
-
-    const userName = await get("userName");
-    const conversationCount = ((await get("conversationCount")) as number) || 0;
-    const userFacts = ((await get("userFacts")) as string[]) || [];
-    const conversationSummaries =
-      ((await get("conversationSummaries")) as any[]) || [];
-    const userLearnings = ((await get("userLearnings")) as any[]) || [];
-
-    if (userName) {
-      log.info(`📝 Your name: ${userName}`);
-    } else {
-      log.info("📝 I don't know your name yet");
-    }
-
-    log.info(`💬 Total conversations: ${conversationCount}`);
-
-    if (userFacts.length > 0) {
-      log.info(`📚 Facts I remember about you:`);
-      userFacts.forEach((fact, i) => {
-        console.log(chalk.gray(`   ${i + 1}. ${fact}`));
-      });
-    } else {
-      log.info("📚 No specific facts remembered yet");
-    }
-
-    if (conversationSummaries.length > 0) {
-      log.info(`📊 Conversation milestones:`);
-      conversationSummaries.forEach((summary) => {
-        console.log(
-          chalk.gray(
-            `   - Conversation #${summary.conversationNumber} on ${new Date(
-              summary.timestamp
-            ).toLocaleDateString()}`
-          )
-        );
-      });
-    }
-
-    if (userLearnings.length > 0) {
-      log.info(`🎓 Topics we've explored together:`);
-      userLearnings.forEach((learning) => {
-        console.log(
-          chalk.gray(
-            `   - ${learning.topic} (${learning.questionsAsked} questions, ${learning.depth} depth)`
-          )
-        );
-      });
-    }
-  }
-
-  /**
-   * Simulate useSoulMemory hook functionality
-   */
-  getSoulMemoryInterface() {
-    return {
-      get: async (key: string) => {
-        const value = this.soulMemoryStore.get(key);
-        log.memory(
-          `Retrieved memory '${key}': ${
-            value !== undefined ? JSON.stringify(value) : "undefined"
-          }`
-        );
-        return value;
-      },
-      set: async (key: string, value: any) => {
-        this.soulMemoryStore.set(key, value);
-        log.memory(`Stored memory '${key}': ${JSON.stringify(value)}`);
-        // Save to file after each set operation
-        this.saveMemoriesToFile();
-      },
-    };
-  }
 }
 
 /**
@@ -531,7 +303,6 @@ async function conversationLoop(soul: LocalSoulRunner) {
   log.info("  'exit' - End conversation");
   log.info("  'debug' - Show soul state");
   log.info("  'memory' - Show memory details");
-  log.info("  'about me' - Show what Scholar remembers about you");
 
   // Handle soul speech events
   soul.on("speaks", (event) => {
@@ -579,11 +350,6 @@ async function conversationLoop(soul: LocalSoulRunner) {
         log.info(`Last memory role: ${state.lastMemory.role}`);
         log.info(`Last memory preview: ${state.lastMemory.contentPreview}`);
       }
-      continue;
-    }
-
-    if (message.toLowerCase() === "about me") {
-      await soul.showWhatIRemember();
       continue;
     }
 

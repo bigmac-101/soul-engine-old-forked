@@ -126,27 +126,6 @@ npm run dev
 - **`exit`**: End the conversation
 - **`debug`**: Show soul state information
 - **`memory`**: Inspect working memory (simulated)
-- **`about me`**: Show what Scholar remembers about you
-
-### Persistent Memory 🆕
-
-The Scholar soul now has persistent memory that survives between conversations! Scholar remembers:
-
-- **Your name** - Tell Scholar your name and they'll remember it forever
-- **Facts about you** - Things you like, your job, preferences, etc.
-- **Conversation history** - Number of conversations and milestones
-- **Topics explored** - What you've learned together
-
-Memory is stored in `.soul-memories/scholar-memory.json` and persists between sessions.
-
-Example interactions that Scholar will remember:
-
-- "My name is Alice"
-- "I love hiking"
-- "My favorite color is blue"
-- "I work as a software engineer"
-
-Use the `about me` command to see everything Scholar remembers about you!
 
 ### What You'll See
 
