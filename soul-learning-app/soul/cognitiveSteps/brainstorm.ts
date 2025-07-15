@@ -40,7 +40,8 @@ const brainstorm = createCognitiveStep((options: BrainstormOptions) => {
   });
 
   return {
-    command: ({ entityName }: WorkingMemory) => {
+    command: (memory: WorkingMemory) => {
+      const entityName = (memory as any).entityName || memory.soulName;
       const constraintText = options.constraints
         ? `\nConstraints to consider:\n${options.constraints
             .map((c) => `- ${c}`)
@@ -110,7 +111,9 @@ const brainstorm = createCognitiveStep((options: BrainstormOptions) => {
 
       const brainstormMemory = {
         role: ChatMessageRoleEnum.Assistant,
-        content: `${memory.entityName} brainstormed:\n\n${formattedIdeas}\n\nTheme: ${response.theme}`,
+        content: `${
+          (memory as any).entityName || memory.soulName
+        } brainstormed:\n\n${formattedIdeas}\n\nTheme: ${response.theme}`,
         metadata: {
           type: "brainstorm",
           topic: options.topic,

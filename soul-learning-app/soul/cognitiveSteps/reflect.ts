@@ -29,9 +29,10 @@ const reflect = createCognitiveStep((options: ReflectOptions) => {
   console.log(`   Focus: ${options.focusOn || "general"}`);
 
   return {
-    command: ({ entityName, memories }: WorkingMemory) => {
+    command: (memory: WorkingMemory) => {
+      const entityName = (memory as any).entityName || memory.soulName;
       // Gather relevant memories based on timeframe
-      const relevantMemories = memories.slice(
+      const relevantMemories = memory.memories.slice(
         options.timeframe === "recent"
           ? -10
           : options.timeframe === "session"
@@ -157,7 +158,9 @@ const reflect = createCognitiveStep((options: ReflectOptions) => {
 
       const reflectionMemory = {
         role: ChatMessageRoleEnum.Assistant,
-        content: `${memory.entityName} reflects: ${reflectionContent}`,
+        content: `${
+          (memory as any).entityName || memory.soulName
+        } reflects: ${reflectionContent}`,
         metadata: {
           type: "reflection",
           topic: options.topic,

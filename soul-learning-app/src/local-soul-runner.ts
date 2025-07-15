@@ -51,6 +51,26 @@ class LocalSoulRunner extends EventEmitter {
   private isProcessing: boolean = false;
   private soulMemoryStore = new Map<string, any>();
 
+  /**
+   * Simple soul memory system for local testing
+   */
+  private soulMemory: Map<string, any> = new Map();
+
+  /**
+   * Soul memory getter
+   */
+  private async getSoulMemory(key: string): Promise<any> {
+    return this.soulMemory.get(key);
+  }
+
+  /**
+   * Soul memory setter
+   */
+  private async setSoulMemory(key: string, value: any): Promise<void> {
+    this.soulMemory.set(key, value);
+    log.memory(`🧠 Soul memory updated: ${key} = ${JSON.stringify(value)}`);
+  }
+
   constructor(soulName: string) {
     super();
     this.soulName = soulName;
@@ -83,7 +103,7 @@ class LocalSoulRunner extends EventEmitter {
           },
           {
             role: ChatMessageRoleEnum.System,
-            content: "You are running locally. Engage naturally with the user.",
+            content: "Engage naturally with the user.",
           },
         ],
       });
@@ -200,44 +220,368 @@ class LocalSoulRunner extends EventEmitter {
   }
 
   /**
-   * Run the soul's cognitive process
+   * Enhanced cognitive process using all cognitive steps
    */
   private async runCognitiveProcess() {
     const startTime = Date.now();
+    log.process("🧠 Starting enhanced cognitive process...");
 
-    // Simulate the initial process logic
-    log.process("Running cognitive process...");
+    try {
+      // Step 1: Initial perception and reflection
+      await this.perceptionPhase();
 
-    // Step 1: Internal monologue
-    if (this.cognitiveSteps.has("internalMonologue")) {
-      log.process("Step 1: Internal reflection");
-      const internalMonologue = this.cognitiveSteps.get("internalMonologue")!;
+      // Step 2: Memory retrieval and context building
+      await this.memoryPhase();
 
-      try {
-        const [newMemory, thought] = await internalMonologue(
-          this.workingMemory,
-          {
-            instructions: "Reflect on the user's message and your purpose",
-            verb: "contemplates",
-          }
-        );
+      // Step 3: Decision making for interaction mode
+      const interactionMode = await this.decisionPhase();
+
+      // Step 4: Execute appropriate subprocess
+      await this.subprocessPhase(interactionMode);
+
+      // Step 5: Final reflection and learning
+      await this.reflectionPhase();
+    } catch (error) {
+      log.error(
+        `Error in cognitive process: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+      await this.handleCognitiveError();
+    }
+
+    const duration = Date.now() - startTime;
+    log.success(`🎯 Enhanced cognitive process completed in ${duration}ms`);
+    log.memory(`💾 Final memory count: ${this.workingMemory.memories.length}`);
+  }
+
+  /**
+   * Phase 1: Perception and initial reflection
+   */
+  private async perceptionPhase() {
+    log.process("👁️ Phase 1: Perception and reflection");
+
+    // Use perceive to process the user's message
+    if (this.cognitiveSteps.has("perceive")) {
+      const perceive = this.cognitiveSteps.get("perceive")!;
+      const lastUserMessage = this.workingMemory.memories
+        .filter((m) => m.role === ChatMessageRoleEnum.User)
+        .slice(-1)[0];
+
+      if (lastUserMessage) {
+        const [newMemory, perception] = await perceive(this.workingMemory, {
+          stimulus: lastUserMessage.content,
+          type: "message",
+          depth: "comprehensive",
+        });
+
         this.workingMemory = newMemory;
         this.ensureEntityName();
-      } catch (error) {
-        log.error("Error in internal monologue");
+        log.process(`🔍 Perception: ${perception}`);
       }
     }
 
-    // Step 2: External dialog (response)
+    // Internal monologue for deeper reflection
+    if (this.cognitiveSteps.has("internalMonologue")) {
+      const internalMonologue = this.cognitiveSteps.get("internalMonologue")!;
+
+      const [newMemory, thought] = await internalMonologue(this.workingMemory, {
+        instructions:
+          "Reflect deeply on the user's message. Consider their emotional state, intent, and what they might truly need. Be philosophical and empathetic.",
+        verb: "contemplates",
+        modelClass: "quality",
+      });
+
+      this.workingMemory = newMemory;
+      this.ensureEntityName();
+      log.process(`💭 Deep reflection: ${thought}`);
+    }
+  }
+
+  /**
+   * Phase 2: Memory retrieval and context building
+   */
+  private async memoryPhase() {
+    log.process("🧠 Phase 2: Memory retrieval and context building");
+
+    // Check for stored user information
+    const userName = await this.getSoulMemory("userName");
+    const conversationCount =
+      (await this.getSoulMemory("conversationCount")) || 0;
+    const userInterests = (await this.getSoulMemory("userInterests")) || [];
+    const previousTopics = (await this.getSoulMemory("previousTopics")) || [];
+
+    if (userName || conversationCount > 0) {
+      log.memory(
+        `📝 Found user: ${
+          userName || "unknown"
+        }, conversations: ${conversationCount}`
+      );
+
+      // Use mental query to recall previous interactions
+      if (this.cognitiveSteps.has("mentalQuery")) {
+        const mentalQuery = this.cognitiveSteps.get("mentalQuery")!;
+
+        const [newMemory, recollection] = await mentalQuery(
+          this.workingMemory,
+          {
+            query: `I remember ${
+              userName || "this person"
+            }. What did we discuss before? What are their interests and learning style?`,
+            verb: "recalls",
+            modelClass: "quality",
+          }
+        );
+
+        this.workingMemory = newMemory;
+        this.ensureEntityName();
+        log.process(`🔍 Memory recall: ${recollection}`);
+      }
+    }
+
+    // Update conversation count
+    await this.setSoulMemory("conversationCount", conversationCount + 1);
+  }
+
+  /**
+   * Phase 3: Decision making for interaction mode
+   */
+  private async decisionPhase(): Promise<string> {
+    log.process("🎯 Phase 3: Decision making for interaction mode");
+
+    if (this.cognitiveSteps.has("decision")) {
+      const decision = this.cognitiveSteps.get("decision")!;
+
+      const [newMemory, choice] = await decision(this.workingMemory, {
+        question:
+          "Based on the user's message and our conversation history, what type of interaction would be most helpful?",
+        choices: [
+          "learning",
+          "teaching",
+          "exploring",
+          "emotional_support",
+          "brainstorming",
+        ],
+      });
+
+      this.workingMemory = newMemory;
+      this.ensureEntityName();
+      log.process(`🎯 Chosen interaction mode: ${choice}`);
+
+      return choice;
+    }
+
+    return "exploring"; // Default fallback
+  }
+
+  /**
+   * Phase 4: Execute appropriate subprocess
+   */
+  private async subprocessPhase(interactionMode: string) {
+    log.process(`🌳 Phase 4: Executing ${interactionMode} subprocess`);
+
+    switch (interactionMode) {
+      case "learning":
+        await this.learningSubprocess();
+        break;
+      case "teaching":
+        await this.teachingSubprocess();
+        break;
+      case "emotional_support":
+        await this.emotionalSupportSubprocess();
+        break;
+      case "brainstorming":
+        await this.brainstormingSubprocess();
+        break;
+      default:
+        await this.explorationSubprocess();
+    }
+  }
+
+  /**
+   * Learning subprocess simulation
+   */
+  private async learningSubprocess() {
+    log.process("📚 Learning subprocess activated");
+
+    // Use mental query to understand what the user wants to learn
+    if (this.cognitiveSteps.has("mentalQuery")) {
+      const mentalQuery = this.cognitiveSteps.get("mentalQuery")!;
+
+      const [newMemory, analysis] = await mentalQuery(this.workingMemory, {
+        query:
+          "What does the user want to learn? What's their current knowledge level? How can I best help them?",
+        verb: "analyzes",
+        modelClass: "quality",
+      });
+
+      this.workingMemory = newMemory;
+      this.ensureEntityName();
+    }
+
+    // Generate learning-focused response
+    await this.generateResponse(
+      "Focus on learning together. Ask curious questions, gauge their understanding, and suggest resources or explanations. Be patient and encouraging."
+    );
+  }
+
+  /**
+   * Teaching subprocess simulation
+   */
+  private async teachingSubprocess() {
+    log.process("🎓 Teaching subprocess activated");
+
+    // Use mental query to assess teaching approach
+    if (this.cognitiveSteps.has("mentalQuery")) {
+      const mentalQuery = this.cognitiveSteps.get("mentalQuery")!;
+
+      const [newMemory, approach] = await mentalQuery(this.workingMemory, {
+        query:
+          "What teaching approach would work best for this user? How can I break down complex concepts clearly?",
+        verb: "strategizes",
+        modelClass: "quality",
+      });
+
+      this.workingMemory = newMemory;
+      this.ensureEntityName();
+    }
+
+    // Generate teaching-focused response
+    await this.generateResponse(
+      "Focus on teaching effectively. Use clear explanations, provide examples, check for understanding, and adapt your teaching style to their needs."
+    );
+  }
+
+  /**
+   * Emotional support subprocess simulation
+   */
+  private async emotionalSupportSubprocess() {
+    log.process("💝 Emotional support subprocess activated");
+
+    // Use internal monologue for empathy
+    if (this.cognitiveSteps.has("internalMonologue")) {
+      const internalMonologue = this.cognitiveSteps.get("internalMonologue")!;
+
+      const [newMemory, empathy] = await internalMonologue(this.workingMemory, {
+        instructions:
+          "Feel deeply for the user's emotional state. Consider what they truly need right now - validation, comfort, encouragement, or just someone to listen.",
+        verb: "empathizes",
+        modelClass: "quality",
+      });
+
+      this.workingMemory = newMemory;
+      this.ensureEntityName();
+    }
+
+    // Generate supportive response
+    await this.generateResponse(
+      "Provide emotional support. Be empathetic, validating, and encouraging. Listen actively and offer comfort without judgment."
+    );
+  }
+
+  /**
+   * Brainstorming subprocess simulation
+   */
+  private async brainstormingSubprocess() {
+    log.process("💡 Brainstorming subprocess activated");
+
+    // Use brainstorm cognitive step
+    if (this.cognitiveSteps.has("brainstorm")) {
+      const brainstorm = this.cognitiveSteps.get("brainstorm")!;
+
+      const [newMemory, ideas] = await brainstorm(this.workingMemory, {
+        topic:
+          "creative solutions and innovative ideas for the user's interests",
+        approach: "creative",
+        quantity: 5,
+      });
+
+      this.workingMemory = newMemory;
+      this.ensureEntityName();
+    }
+
+    // Generate creative response
+    await this.generateResponse(
+      "Engage in creative brainstorming. Think outside the box, suggest innovative ideas, and encourage creative thinking together."
+    );
+  }
+
+  /**
+   * Default exploration subprocess
+   */
+  private async explorationSubprocess() {
+    log.process("🔍 Exploration subprocess activated");
+
+    // Use mental query for curiosity
+    if (this.cognitiveSteps.has("mentalQuery")) {
+      const mentalQuery = this.cognitiveSteps.get("mentalQuery")!;
+
+      const [newMemory, curiosity] = await mentalQuery(this.workingMemory, {
+        query:
+          "What fascinating topics could we explore together? What might spark interesting conversation?",
+        verb: "wonders",
+        modelClass: "quality",
+      });
+
+      this.workingMemory = newMemory;
+      this.ensureEntityName();
+    }
+
+    // Generate exploratory response
+    await this.generateResponse(
+      "Engage in curious exploration. Ask thoughtful questions, share interesting insights, and guide the conversation toward fascinating topics."
+    );
+  }
+
+  /**
+   * Phase 5: Final reflection and learning
+   */
+  private async reflectionPhase() {
+    log.process("🪞 Phase 5: Final reflection and learning");
+
+    // Use reflect cognitive step for deep introspection
+    if (this.cognitiveSteps.has("reflect")) {
+      const reflect = this.cognitiveSteps.get("reflect")!;
+
+      const [newMemory, reflection] = await reflect(this.workingMemory, {
+        topic: "this conversation and what I've learned about the user",
+        depth: "deep",
+        focus: "learning",
+      });
+
+      this.workingMemory = newMemory;
+      this.ensureEntityName();
+
+      // Handle reflection output properly (can be string or object)
+      if (typeof reflection === "string") {
+        log.process(`🪞 Final reflection: ${reflection}`);
+      } else if (reflection && typeof reflection === "object") {
+        log.process(
+          `🪞 Final reflection: ${JSON.stringify(reflection, null, 2)}`
+        );
+      } else {
+        log.process(`🪞 Final reflection: ${reflection}`);
+      }
+    }
+
+    // Extract and store user interests from conversation
+    await this.extractAndStoreUserInfo();
+  }
+
+  /**
+   * Generate final response using external dialog
+   */
+  private async generateResponse(instructions: string) {
+    log.process("🗣️ Generating response");
+
     if (this.cognitiveSteps.has("externalDialog")) {
-      log.process("Step 2: Generating response");
       const externalDialog = this.cognitiveSteps.get("externalDialog")!;
 
       try {
         const [newMemory, response] = await externalDialog(this.workingMemory, {
-          instructions:
-            "Respond thoughtfully to the user, demonstrating your understanding and curiosity",
+          instructions,
           stream: false,
+          model: "quality",
         });
 
         this.workingMemory = newMemory;
@@ -247,22 +591,54 @@ class LocalSoulRunner extends EventEmitter {
         this.emit("speaks", { content: response });
       } catch (error) {
         log.error("Error in external dialog");
-        // Fallback response
-        const fallbackResponse =
-          "I apologize, but I'm having trouble formulating a response. Could you please rephrase your message?";
-        this.emit("speaks", { content: fallbackResponse });
-
-        this.workingMemory = this.workingMemory.withMemory({
-          role: ChatMessageRoleEnum.Assistant,
-          content: fallbackResponse,
-        });
-        this.ensureEntityName();
+        await this.handleCognitiveError();
       }
     }
+  }
 
-    const duration = Date.now() - startTime;
-    log.success(`Cognitive process completed in ${duration}ms`);
-    log.memory(`Final memory count: ${this.workingMemory.memories.length}`);
+  /**
+   * Extract and store user information for future conversations
+   */
+  private async extractAndStoreUserInfo() {
+    const userMessages = this.workingMemory.memories
+      .filter((m) => m.role === ChatMessageRoleEnum.User)
+      .map((m) => m.content)
+      .join(" ");
+
+    // Simple extraction logic (in real implementation, this would use NLP)
+    const nameMatch = userMessages.match(
+      /my name is (\w+)|i'm (\w+)|call me (\w+)/i
+    );
+    if (nameMatch) {
+      const name = nameMatch[1] || nameMatch[2] || nameMatch[3];
+      await this.setSoulMemory("userName", name);
+    }
+
+    // Extract interests
+    const interests = (await this.getSoulMemory("userInterests")) || [];
+    // This would be more sophisticated in a real implementation
+    if (userMessages.includes("love") || userMessages.includes("interested")) {
+      interests.push("general_conversation");
+      await this.setSoulMemory("userInterests", interests);
+    }
+  }
+
+  /**
+   * Handle cognitive errors gracefully
+   */
+  private async handleCognitiveError() {
+    log.error("🚨 Cognitive error detected, using fallback response");
+
+    const fallbackResponse =
+      "I apologize, but I'm having trouble processing right now. Could you please rephrase your message? I'm here to help and learn with you.";
+
+    this.emit("speaks", { content: fallbackResponse });
+
+    this.workingMemory = this.workingMemory.withMemory({
+      role: ChatMessageRoleEnum.Assistant,
+      content: fallbackResponse,
+    });
+    this.ensureEntityName();
   }
 
   /**

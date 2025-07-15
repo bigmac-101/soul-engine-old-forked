@@ -37,9 +37,10 @@ const mentalQuery = createCognitiveStep((options: MentalQueryOptions) => {
   console.log(`   Structured: ${options.structuredResponse || false}`);
 
   return {
-    command: ({ entityName, memories }: WorkingMemory) => {
+    command: (memory: WorkingMemory) => {
+      const entityName = (memory as any).entityName || memory.soulName;
       // Extract key information from memories
-      const relevantMemories = memories
+      const relevantMemories = memory.memories
         .filter((m) => m.content.length > 50)
         .slice(-10)
         .map((m, i) => `[${i}] ${m.role}: ${m.content}`)
@@ -65,9 +66,11 @@ const mentalQuery = createCognitiveStep((options: MentalQueryOptions) => {
       `;
 
       console.log(`\n📚 [QUERY CONTEXT]`);
-      console.log(`   Memories analyzed: ${Math.min(10, memories.length)}`);
       console.log(
-        `   Total memory size: ${memories.reduce(
+        `   Memories analyzed: ${Math.min(10, memory.memories.length)}`
+      );
+      console.log(
+        `   Total memory size: ${memory.memories.reduce(
           (acc, m) => acc + m.content.length,
           0
         )} chars`
@@ -112,7 +115,9 @@ const mentalQuery = createCognitiveStep((options: MentalQueryOptions) => {
 
         const queryMemory = {
           role: ChatMessageRoleEnum.Assistant,
-          content: `${memory.entityName} ${verb}: ${formattedResponse}`,
+          content: `${
+            (memory as any).entityName || memory.soulName
+          } ${verb}: ${formattedResponse}`,
           metadata: {
             type: "mental_query",
             query: options.query,
@@ -131,7 +136,9 @@ const mentalQuery = createCognitiveStep((options: MentalQueryOptions) => {
 
       const queryMemory = {
         role: ChatMessageRoleEnum.Assistant,
-        content: `${memory.entityName} ${verb}: ${response}`,
+        content: `${
+          (memory as any).entityName || memory.soulName
+        } ${verb}: ${response}`,
         metadata: {
           type: "mental_query",
           query: options.query,

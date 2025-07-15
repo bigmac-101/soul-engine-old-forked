@@ -28,8 +28,9 @@ const perceive = createCognitiveStep((options: PerceiveOptions) => {
   console.log(`   Stimulus: ${options.stimulus}`);
 
   return {
-    command: ({ entityName, memories }: WorkingMemory) => {
-      const recentPerceptions = memories
+    command: (memory: WorkingMemory) => {
+      const entityName = (memory as any).entityName || memory.soulName;
+      const recentPerceptions = memory.memories
         .filter((m) => m.metadata?.type === "perception")
         .slice(-3)
         .map((m) => m.content)
@@ -66,7 +67,8 @@ const perceive = createCognitiveStep((options: PerceiveOptions) => {
       console.log(`\n🔍 [PERCEPTION CONTEXT]`);
       console.log(
         `   Previous perceptions: ${
-          memories.filter((m) => m.metadata?.type === "perception").length
+          memory.memories.filter((m) => m.metadata?.type === "perception")
+            .length
         }`
       );
       console.log(`   Analyze emotions: ${options.analyzeEmotions || false}`);
@@ -137,7 +139,9 @@ const perceive = createCognitiveStep((options: PerceiveOptions) => {
 
       const perceptionMemory = {
         role: ChatMessageRoleEnum.Assistant,
-        content: `${memory.entityName} perceives: ${perceptionContent}`,
+        content: `${
+          (memory as any).entityName || memory.soulName
+        } perceives: ${perceptionContent}`,
         metadata: {
           type: "perception",
           stimulusType: options.type,
