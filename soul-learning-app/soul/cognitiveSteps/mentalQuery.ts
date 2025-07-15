@@ -42,7 +42,7 @@ const mentalQuery = createCognitiveStep((options: MentalQueryOptions) => {
       const relevantMemories = memories
         .filter((m) => m.content.length > 50)
         .slice(-10)
-        .map((m, i) => `[${i}] ${m.role}: ${m.content.substring(0, 200)}...`)
+        .map((m, i) => `[${i}] ${m.role}: ${m.content}`)
         .join("\n\n");
 
       const prompt = indentNicely`
@@ -127,7 +127,7 @@ const mentalQuery = createCognitiveStep((options: MentalQueryOptions) => {
 
       // Unstructured response
       console.log(`   Response length: ${response.length} chars`);
-      console.log(`   Response preview: ${response.substring(0, 150)}...`);
+      console.log(`   Response preview: ${response}`);
 
       const queryMemory = {
         role: ChatMessageRoleEnum.Assistant,

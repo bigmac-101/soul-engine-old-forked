@@ -90,9 +90,10 @@ class LocalSoulRunner extends EventEmitter {
       });
 
       // Add entityName as an alias for cognitive steps that expect it
+      const soulName = this.soulName;
       Object.defineProperty(this.workingMemory, "entityName", {
         get() {
-          return this.soulName;
+          return soulName;
         },
         configurable: true,
         enumerable: false,
@@ -188,9 +189,10 @@ class LocalSoulRunner extends EventEmitter {
    */
   private ensureEntityName() {
     if (!this.workingMemory.hasOwnProperty("entityName")) {
+      const soulName = this.soulName;
       Object.defineProperty(this.workingMemory, "entityName", {
         get() {
-          return this.soulName;
+          return soulName;
         },
         configurable: true,
         enumerable: false,
@@ -285,7 +287,7 @@ class LocalSoulRunner extends EventEmitter {
       lastMemory: lastMemory
         ? {
             ...lastMemory,
-            contentPreview: contentStr.substring(0, 100) + "...",
+            contentPreview: contentStr,
           }
         : null,
     };

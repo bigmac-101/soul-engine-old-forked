@@ -46,7 +46,7 @@ const decision = createCognitiveStep(
         // Analyze recent context for better decision making
         const recentContext = memories
           .slice(-5)
-          .map((m) => `${m.role}: ${m.content.substring(0, 100)}...`)
+          .map((m) => `${m.role}: ${m.content}`)
           .join("\n");
 
         const prompt = indentNicely`

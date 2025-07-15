@@ -144,7 +144,7 @@ async function demonstrateWorkingMemory(soul: Soul) {
   ];
 
   log.info(`Initial memory count: ${memories.length}`);
-  log.memory(`System memory 1: ${memories[0].content.substring(0, 100)}...`);
+  log.memory(`System memory 1: ${memories[0].content}`);
   log.memory(`System memory 2: ${memories[1].content}`);
 
   // Dispatch initial perception

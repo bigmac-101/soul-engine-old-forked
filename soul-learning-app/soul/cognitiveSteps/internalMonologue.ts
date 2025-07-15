@@ -36,12 +36,11 @@ const internalMonologue = createCognitiveStep(
     const verb = options.verb || "thinks";
 
     console.log(`\n💭 [INTERNAL MONOLOGUE] Soul is ${verb}...`);
-    console.log(
-      `   Instructions: ${options.instructions.substring(0, 100)}...`
-    );
+    console.log(`   Instructions: ${options.instructions}`);
 
     return {
-      command: ({ entityName }: WorkingMemory) => {
+      command: (memory: WorkingMemory) => {
+        const entityName = (memory as any).entityName || memory.soulName;
         const prompt = indentNicely`
         Model the mind of ${entityName}.
         
@@ -64,18 +63,21 @@ const internalMonologue = createCognitiveStep(
 
       postProcess: async (memory: WorkingMemory, thought: string) => {
         console.log(`\n🧠 [INTERNAL THOUGHT PROCESSING]`);
-        console.log(`   Raw thought: ${thought.substring(0, 150)}...`);
+        console.log(`   Raw thought: ${thought}`);
+
+        // Get entity name
+        const entityName = (memory as any).entityName || memory.soulName;
 
         // Clean the thought of any entity name prefixes
         const cleanThought = thought.replace(
-          new RegExp(`^${memory.entityName}:?\\s*`, "i"),
+          new RegExp(`^${entityName}:?\\s*`, "i"),
           ""
         );
 
         // Create the internal memory with special formatting
         const internalMemory = {
           role: ChatMessageRoleEnum.Assistant,
-          content: `${memory.entityName} ${verb}: ${cleanThought}`,
+          content: `${entityName} ${verb}: ${cleanThought}`,
           metadata: {
             type: "internal_monologue",
             verb: verb,
@@ -84,9 +86,7 @@ const internalMonologue = createCognitiveStep(
         };
 
         console.log(
-          `   Formatted as: "${
-            memory.entityName
-          } ${verb}: ${cleanThought.substring(0, 80)}..."`
+          `   Formatted as: "${entityName} ${verb}: ${cleanThought}"`
         );
         console.log(`   Memory type: internal_monologue`);
 

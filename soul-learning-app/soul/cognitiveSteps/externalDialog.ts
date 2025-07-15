@@ -41,7 +41,8 @@ const externalDialog = createCognitiveStep((options: ExternalDialogOptions) => {
   );
 
   return {
-    command: ({ entityName }: WorkingMemory) => {
+    command: (memory: WorkingMemory) => {
+      const entityName = (memory as any).entityName || memory.soulName;
       // This demonstrates how commands are constructed
       const prompt = indentNicely`
         Model the mind of ${entityName}.
@@ -101,9 +102,7 @@ const externalDialog = createCognitiveStep((options: ExternalDialogOptions) => {
         "says",
         response
       );
-      console.log(
-        `   📤 Clean response: ${cleanResponse.substring(0, 100)}...`
-      );
+      console.log(`   📤 Clean response: ${cleanResponse}`);
 
       const assistantMemory = {
         role: ChatMessageRoleEnum.Assistant,

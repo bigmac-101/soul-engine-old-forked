@@ -25,7 +25,7 @@ interface PerceiveOptions {
 
 const perceive = createCognitiveStep((options: PerceiveOptions) => {
   console.log(`\n👁️ [PERCEIVE] Processing ${options.type} stimulus...`);
-  console.log(`   Stimulus: ${options.stimulus.substring(0, 100)}...`);
+  console.log(`   Stimulus: ${options.stimulus}`);
 
   return {
     command: ({ entityName, memories }: WorkingMemory) => {

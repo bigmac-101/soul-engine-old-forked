@@ -64,7 +64,11 @@ async function demonstrateWorkingMemory() {
   console.log(`   Soul Name: ${initialMemory.soulName}`);
   console.log(`   Memory Count: ${initialMemory.memories.length}`);
   console.log(`   Processor: ${initialMemory.processor?.name}`);
-  console.log(`   Entity Name: ${initialMemory.entityName}`);
+  console.log(
+    `   Entity Name: ${
+      (initialMemory as any).entityName || initialMemory.soulName
+    }`
+  );
 
   // Add a user message
   const withUserMessage = initialMemory.withMemory({
@@ -97,7 +101,9 @@ async function demonstrateCognitiveTransformation(
   // Simulate what a cognitive step does internally
   const transformationCommand = {
     role: ChatMessageRoleEnum.System,
-    content: `Model the mind of ${workingMemory.entityName}.
+    content: `Model the mind of ${
+      (workingMemory as any).entityName || workingMemory.soulName
+    }.
     
     The user asked: "${
       workingMemory.memories[workingMemory.memories.length - 1].content
@@ -108,9 +114,7 @@ async function demonstrateCognitiveTransformation(
   };
 
   console.log(chalk.blue("🧠 Transformation Command:"));
-  console.log(
-    chalk.gray(transformationCommand.content.substring(0, 200) + "...")
-  );
+  console.log(chalk.gray(transformationCommand.content));
 
   // Simulate the response
   const simulatedResponse = `I operate through a sophisticated memory architecture called Working Memory. 
@@ -127,7 +131,7 @@ My memories are structured with roles (system, user, assistant) and can include 
 
   console.log(chalk.green("\n✅ After cognitive transformation:"));
   console.log(`   Memory Count: ${afterResponse.memories.length}`);
-  console.log(`   Response preview: ${simulatedResponse.substring(0, 100)}...`);
+  console.log(`   Response preview: ${simulatedResponse}`);
 
   return afterResponse;
 }
@@ -324,7 +328,10 @@ async function main() {
     );
     console.log(chalk.gray("application with a local Soul Engine instance."));
   } catch (error) {
-    console.error(chalk.red("\n❌ Error:"), error.message);
+    console.error(
+      chalk.red("\n❌ Error:"),
+      error instanceof Error ? error.message : String(error)
+    );
   }
 }
 
