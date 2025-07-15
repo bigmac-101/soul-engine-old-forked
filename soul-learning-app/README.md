@@ -68,13 +68,40 @@ npm install
 3. **Set up environment variables**:
 
 ```bash
-# Create .env file in soul-learning-app directory
-echo "OPENAI_API_KEY=your-api-key-here" > .env
+# Copy the example environment file
+cp env.example .env
+
+# Edit .env and add your OpenAI API key
+# The local runner uses this directly - no cloud auth needed!
 ```
 
 ### Running the Application
 
-Since the official Soul Engine is shut down, you need to run it locally:
+Since the official Soul Engine is shut down, we have three ways to run this:
+
+#### Option 1: Direct Demo (No Engine, No API calls)
+
+```bash
+cd soul-learning-app
+npm run demo
+```
+
+This demonstrates the concepts without making any API calls.
+
+#### Option 2: Local Runner (Real Framework, No Cloud Auth) ⭐ RECOMMENDED
+
+```bash
+cd soul-learning-app
+npm run local
+```
+
+This uses the real OPEN SOULS framework components locally. You'll need:
+
+- API keys in your `.env` file for the LLM calls
+- No cloud authentication or browser login required!
+- This is the best way to see the real framework in action
+
+#### Option 3: Full Soul Engine (Original Architecture)
 
 **Terminal 1 - Start Local Soul Engine:**
 
@@ -89,9 +116,6 @@ npm run soul-engine
 ```bash
 cd soul-learning-app
 npm run dev
-# Or build and run:
-npm run build
-npm start
 ```
 
 ## 🎮 Using the Application

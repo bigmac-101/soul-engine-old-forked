@@ -85,14 +85,22 @@ const externalDialog = createCognitiveStep((options: ExternalDialogOptions) => {
 
         const spokenMemory = {
           role: ChatMessageRoleEnum.Assistant,
-          content: stripEntityAndVerb(response.response),
+          content: stripEntityAndVerb(
+            memory.soulName,
+            "says",
+            response.response
+          ),
         };
 
         return [[thoughtMemory, spokenMemory], response.response];
       }
 
       // Default processing
-      const cleanResponse = stripEntityAndVerb(response);
+      const cleanResponse = stripEntityAndVerb(
+        memory.soulName,
+        "says",
+        response
+      );
       console.log(
         `   📤 Clean response: ${cleanResponse.substring(0, 100)}...`
       );
