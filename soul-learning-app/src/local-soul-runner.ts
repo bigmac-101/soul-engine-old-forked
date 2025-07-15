@@ -399,19 +399,21 @@ class LocalSoulRunner extends EventEmitter {
   }
 
   /**
-   * Learning subprocess simulation
+   * Learning subprocess simulation - Scholar learns about the user
    */
   private async learningSubprocess() {
-    log.process("📚 Learning subprocess activated");
+    log.process(
+      "📚 Learning subprocess activated - Scholar learning about user"
+    );
 
-    // Use mental query to understand what the user wants to learn
+    // Use mental query to understand what Scholar can learn about the user
     if (this.cognitiveSteps.has("mentalQuery")) {
       const mentalQuery = this.cognitiveSteps.get("mentalQuery")!;
 
       const [newMemory, analysis] = await mentalQuery(this.workingMemory, {
         query:
-          "What does the user want to learn? What's their current knowledge level? How can I best help them?",
-        verb: "analyzes",
+          "What can I learn about this user? What are their interests, communication style, personality traits, and preferences? What questions should I ask to understand them better?",
+        verb: "investigates",
         modelClass: "quality",
       });
 
@@ -419,9 +421,9 @@ class LocalSoulRunner extends EventEmitter {
       this.ensureEntityName();
     }
 
-    // Generate learning-focused response
+    // Generate learning-focused response where Scholar asks questions to learn about the user
     await this.generateResponse(
-      "Focus on learning together. Ask curious questions, gauge their understanding, and suggest resources or explanations. Be patient and encouraging."
+      "Focus on learning about the user. Ask thoughtful questions about their interests, background, preferences, and goals. Show genuine curiosity and listen actively to understand them better."
     );
   }
 
