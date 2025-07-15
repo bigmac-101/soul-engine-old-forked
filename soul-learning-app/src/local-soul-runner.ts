@@ -1,5 +1,5 @@
 /**
- * LOCAL SOUL RUNNER - Fixed Version
+ * LOCAL SOUL RUNNER
  *
  * This runs souls completely locally using the real OPEN SOULS framework
  * without any cloud services or authentication.
@@ -8,8 +8,7 @@
  * and handles all the real framework interactions locally.
  */
 
-import { WorkingMemory } from "@opensouls/core";
-import { ChatMessageRoleEnum } from "@opensouls/core";
+import { ChatMessageRoleEnum, WorkingMemory } from "@opensouls/core";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import ora from "ora";
@@ -419,7 +418,7 @@ console.log("Checking if should run main...");
 // Works with both tsx and node
 const shouldRun =
   process.argv[1] &&
-  (process.argv[1].includes("local-soul-runner-fixed") ||
+  (process.argv[1].includes("local-soul-runner") ||
     process.argv[1].endsWith(".ts"));
 
 if (shouldRun) {

@@ -11,8 +11,8 @@
     "soul-engine": "node ../packages/soul-engine-cli/bin/run.js dev --local",
     "demo": "tsx src/direct-demo.ts",
     "demo:build": "npm run build && node dist/direct-demo.js",
-    "local": "tsx src/local-soul-runner-fixed.ts",
-    "local:build": "npm run build && node dist/local-soul-runner-fixed.js",
+    "local": "tsx src/local-soul-runner.ts",
+    "local:build": "npm run build && node dist/local-soul-runner.js",
     "test-imports": "tsx src/test-imports.ts",
     "test": "node src/minimal-test.ts",
     "standalone": "tsx src/standalone-demo.ts"

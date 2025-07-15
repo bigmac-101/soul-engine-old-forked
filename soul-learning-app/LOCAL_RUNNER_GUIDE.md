@@ -30,7 +30,7 @@ That's it! No browser login, no cloud services, just the real OPEN SOULS framewo
 
 ## 🎯 What the Local Runner Does
 
-The local runner (`src/local-soul-runner-fixed.ts`) provides:
+The local runner (`src/local-soul-runner.ts`) provides:
 
 1. **Real WorkingMemory** - Uses the actual `@opensouls/core` WorkingMemory class
 2. **Real Cognitive Steps** - Loads and executes your cognitive steps

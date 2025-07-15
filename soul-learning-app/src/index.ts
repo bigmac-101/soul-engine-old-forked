@@ -14,15 +14,15 @@
  * All with extensive logging to understand the inner workings.
  */
 
-import { Soul, WorkingMemory } from "@opensouls/soul";
 import { ChatMessageRoleEnum } from "@opensouls/core";
-import inquirer from "inquirer";
-import chalk from "chalk";
-import ora from "ora";
+import { Soul } from "@opensouls/soul";
 import boxen from "boxen";
+import chalk from "chalk";
 import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
+import inquirer from "inquirer";
+import ora from "ora";
 import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 // Get the directory of this file
 const __filename = fileURLToPath(import.meta.url);
